@@ -1,0 +1,35 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'vn.herotran.tvcontrol'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'vn.herotran.tvcontrol'
+        minSdk 30
+        targetSdk 34
+        versionCode 12
+        versionName '5.5.6'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+        debug {
+            // Debug build for GitHub Actions artifact
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Zero-dependency app: Firebase via REST (HttpsURLConnection) + org.json (built-in)
+    // No extra libraries needed
+}

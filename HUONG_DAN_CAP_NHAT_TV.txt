@@ -1,0 +1,76 @@
+HUONG DAN - CUNG 1 APK CAI CA DT + TV, KET NOI QUA LAUNCHER
+================================================================
+Doc file nay truoc khi test 4 tinh nang moi.
+
+1) KIEN TRUC THAT (de khong lam sai)
+------------------------------------
+- APK RemoteTV (vn.herotran.tvcontrol, file zip nay) cai ca tren DIEN THOAI va TV.
+- Tren TV, launcher com.ts.launcher dang GIU cong 8999 (TCP + UDP).
+  No nhan lenh CU: set_limit, stop_limit, power_off/on, go_home/back,
+  volume_up/down, sync_cloud_config, sync_gemini, sync_telegram, sync_weather.
+- Vi vay code moi KHONG tranh cong 8999 voi launcher.
+
+2) CACH 4 TINH NANG MOI CHAY (khong can sua launcher)
+------------------------------------------------------
+- Them TvReceiverService trong CHINH APK nay. Khi APK chay tren TV, service nay:
+  + Nghe cong MOI 9000 (TCP) - khong dung 8999.
+  + Poll Firebase node /tv_control/command.json moi 2 giay.
+  + Chi xu ly LENH MOI:
+      take_screenshot, unlock_limit, lock_screen, unlock_screen,
+      show_message, hide_message.
+  + Lenh CU de launcher xu ly (tranh tat TV 2 lan, tang am 2 lan...).
+  + Neu TV chi cai RemoteTV, khong co launcher chay -> Receiver tu xu ly
+    CA lenh cu (standalone). Tu nhan biet bang cach thu ket noi 127.0.0.1:8999.
+
+- Dien thoai gui lenh MOI di CA 2 CONG 8999 + 9000 (LanHelper.sendNewCommandBothPorts).
+  Ben nao hieu thi chay. Lenh CU giu nguyen chi gui 8999.
+
+- unlock_limit (quan trong):
+  Receiver xoa timer cua minh + forward stop_limit ve 127.0.0.1:8999
+  de launcher cung huy dem gio cua no + ghi file unlock_limit.json
+  vao /sdcard/com.ts.launcher/. Neu khong forward, launcher van tat TV
+  theo gioi han cu du DT da bam "Mo khoa".
+
+- Chup anh:
+  LAN: DT thu 9000 truoc, that bai thi thu 8999.
+  Cloud: Receiver chup bang "screencap -p", nen JPEG 70, ~1280px,
+  day Base64 len /tv_control/screenshot.json, DT poll ve nhu cu.
+  Neu TV khong chay duoc screencap (thieu quyen shell), DT se bao loi ro.
+
+- Khoa man hinh / Tin nhan:
+  Receiver mo TvOverlayActivity (Activity fullscreen, KHONG can quyen overlay):
+  + lock_screen: nen DEN TUYET DOI, chu "Tat TV ngay !" trang 56sp, chan BACK.
+  + show_message: nen DEN 50% #80000000, chu TRANG 32sp, cham de tat.
+  + unlock_screen / hide_message / go_home: dong Activity.
+
+3) CAI DAT + BAT
+----------------
+- Cai CUNG 1 file APK nay len ca DT va TV (ghi de ban cu).
+- Tren TV: mo app RemoteTV 1 lan, bam "Bat nhan lenh" trong card
+  "CHE DO TV - NHAN LENH" (tren TV that, app tu bat khi mo).
+  Sau do TV tu chay lai Receiver moi khi khoi dong lai TV (TvBootReceiver).
+- Tren DT: khong can bat card TV MODE. DT la ben DIEU KHIEN.
+- Dong bo lai cau hinh Cloud 1 lan tu DT (nut Luu cau hinh) de TV co
+  Firebase URL/Secret moi (Receiver + launcher cung doc file
+  /sdcard/com.ts.launcher/firebase_config.json).
+
+4) TEST NHANH
+--------------
+- LAN (cung Wi-Fi): DT chon "Mang LAN", Quet TV, bam tung nut moi.
+- Cloud: DT chon "Qua Internet", bat 4G, bam tung nut moi.
+- Khoa: TV den + "Tat TV ngay !" -> bam "Mo khoa man hinh" phai het den.
+- Tin nhan: go "Con oi tat TV di ngu" -> TV hien nen den mo chu trang
+  -> bam "Xoa tin nhan" phai mat.
+- Mo khoa gioi han: dat gioi han 1 phut -> bam "Mo khoa gioi han"
+  -> TV khong tu tat sau 1 phut (nho la Receiver da forward stop_limit cho launcher).
+- Chup anh: LAN tra ngay, Cloud cho 2-10s.
+
+5) NEU KHONG CHAY
+-----------------
+- TV chua cai APK moi -> cai lai APK moi len TV.
+- TV chua bam "Bat nhan lenh" -> mo app tren TV, kiem tra card TV MODE
+  bao "Dang nhan lenh".
+- TV chua cap quyen / khong chay screencap -> chup anh bao loi, 3 tinh nang
+  con lai van chay (khoa, tin nhan, mo khoa khong can screencap).
+- Launcher van tat TV sau khi mo khoa -> kiem tra Receiver co chay khong,
+  vi chi Receiver moi forward stop_limit cho launcher.
